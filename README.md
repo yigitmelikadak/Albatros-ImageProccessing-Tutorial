@@ -31,3 +31,5 @@ ms == 0 => infinite time<br>
   prevent memory leaks and other stuff<br>
 I have problem when:<br>
   understanding .read() <br>  
+  
+October 12, resizing and rescaling
