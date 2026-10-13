@@ -33,3 +33,4 @@ I have problem when:<br>
   understanding .read() <br>  
   
 October 12, resizing and rescaling
+October 13, draw shapes and text
