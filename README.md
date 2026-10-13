@@ -33,4 +33,4 @@ I have problem when:<br>
   understanding .read() <br>  
   
 October 12, resizing and rescaling <br>
-October 13, draw shapes and text, convert gray, gaussian blur, edge cascade, dilate, erode, resize, translate, rotate, flip
+October 13, draw shapes and text, convert gray, gaussian blur, edge cascade, dilate, erode, resize, translate, rotate, flip, finding contours with two ways
