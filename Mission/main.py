@@ -47,7 +47,7 @@ async def camera_interface():
         properly, frame = capture.read()
         frame = cv.bitwise_or(frame, masked)
         cv.imshow('Video', frame)
-        await asyncio.sleep(.1)
+        await asyncio.sleep(0.001)
         if cv.waitKey(20) & 0xFF == ord('q'):
             break
 
@@ -61,48 +61,75 @@ async def detect_object():
         into_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
         into_hsv_blurred = cv.GaussianBlur(into_hsv, (5, 5), 0)
         cv.imshow('Video2', into_hsv_blurred)
-        await asyncio.sleep(.1)
+        await asyncio.sleep(0.001)
+        await asyncio.gather(detect_object_red(into_hsv, properly, frame),
+                             detect_object_orange(into_hsv, properly, frame),
+                             detect_object_yellow(into_hsv, properly, frame),
+                             detect_object_green(into_hsv, properly, frame),
+                             detect_object_blue(into_hsv, properly, frame),
+                             detect_object_cyan(into_hsv, properly, frame),
+                             detect_object_purple(into_hsv, properly, frame),
+                             )
         if cv.waitKey(20) & 0xFF == ord('q'):
             break
 
-async def detect_object_red():
-    L_red1 = np.array([0, 40, 40])
-    U_red1 = np.array([10, 255, 255])
-    L_red2 = np.array([170, 40, 40])
-    U_red2 = np.array([179, 255, 255])
-    while True:
-        properly, frame = capture.read()
-        into_hsv = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
-        # kontrol et bu kodu
-        r_mask = cv.bitwise_or(cv.inRange(into_hsv, L_red1, U_red1), cv.inRange(into_hsv, L_red2, U_red2))
-        red = cv.bitwise_and(frame, frame, mask=r_mask)
-        cv.imshow('red', red)
-        if cv.waitKey(20) & 0xFF == ord('q'):
-            break
+L_red1 = np.array([0, 40, 40])
+U_red1 = np.array([10, 255, 255])
+L_red2 = np.array([170, 40, 40])
+U_red2 = np.array([179, 255, 255])
+# Kırmızı (Red)
+async def detect_object_red(into_hsv, properly, frame):
+    r_mask = cv.bitwise_or(cv.inRange(into_hsv, L_red1, U_red1), cv.inRange(into_hsv, L_red2, U_red2))
+    red = cv.bitwise_and(frame, frame, mask=r_mask)
+    cv.imshow('red', red)
 
-async def detect_object_orange(into_hsv):
-    L_orange = np.array([11, 40, 40])
-    U_orange = np.array([25, 255, 255])
+L_orange = np.array([11, 40, 40])
+U_orange = np.array([25, 255, 255])
+# Turuncu (Orange)
+async def detect_object_orange(into_hsv, properly, frame):
+    mask = cv.inRange(into_hsv, L_orange, U_orange)
+    orange = cv.bitwise_and(frame, frame, mask=mask)
+    cv.imshow('orange', orange)
 
-async def detect_object_yellow(into_hsv):
-    L_yellow = np.array([26, 40, 40])
-    U_yellow = np.array([34, 255, 255])
+L_yellow = np.array([26, 40, 40])
+U_yellow = np.array([34, 255, 255])
+# Sarı (Yellow)
+async def detect_object_yellow(into_hsv, properly, frame):
+        mask = cv.inRange(into_hsv, L_yellow, U_yellow)
+        yellow = cv.bitwise_and(frame, frame, mask=mask)
+        cv.imshow('yellow', yellow)
 
-async def detect_object_green(into_hsv):
-    L_green = np.array([35, 40, 40])
-    U_green = np.array([85, 255, 255])
+L_green = np.array([35, 40, 40])
+U_green = np.array([85, 255, 255])
+# Yeşil (Green)
+async def detect_object_green(into_hsv, properly, frame):
+        mask = cv.inRange(into_hsv, L_green, U_green)
+        green = cv.bitwise_and(frame, frame, mask=mask)
+        cv.imshow('green', green)
 
-async def detect_object_cyan(into_hsv):
-    L_cyan = np.array([86, 40, 40])
-    U_cyan = np.array([99, 255, 255])
+L_cyan = np.array([86, 40, 40])
+U_cyan = np.array([99, 255, 255])
+# Cam Göbeği (Cyan)
+async def detect_object_cyan(into_hsv, properly, frame):
+        mask = cv.inRange(into_hsv, L_cyan, U_cyan)
+        cyan = cv.bitwise_and(frame, frame, mask=mask)
+        cv.imshow('cyan', cyan)
 
-async def detect_object_blue(into_hsv):
-    L_blue = np.array([100, 40, 40])
-    U_blue = np.array([130, 255, 255])
+L_blue = np.array([100, 40, 40])
+U_blue = np.array([130, 255, 255])
+# Mavi (Blue)
+async def detect_object_blue(into_hsv, properly, frame):
+        mask = cv.inRange(into_hsv, L_blue, U_blue)
+        blue = cv.bitwise_and(frame, frame, mask=mask)
+        cv.imshow('blue', blue)
 
-async def detect_object_purple(into_hsv):
-    L_purple = np.array([131, 40, 40])
-    U_purple = np.array([169, 255, 255])
+L_purple = np.array([131, 40, 40])
+U_purple = np.array([169, 255, 255])
+# Mor (Purple)
+async def detect_object_purple(into_hsv, properly, frame):
+    mask = cv.inRange(into_hsv, L_purple, U_purple)
+    purple = cv.bitwise_and(frame, frame, mask=mask)
+    cv.imshow('purple', purple)
 
 async def main():
     await asyncio.gather(camera_interface(), detect_object())
