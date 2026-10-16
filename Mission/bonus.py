@@ -16,8 +16,8 @@ p_height = height // 3
 red_lower = np.array([170, 85, 0])
 red_upper = np.array([179, 200, 255])
 
-green_lower = np.array([53, 63, 40])
-green_upper = np.array([73, 213, 255])
+green_lower = np.array([35, 40, 40])
+green_upper = np.array([93, 200, 255])
 
 def whichsquare(x,y):
     if y > 0 and y <= p_height:
