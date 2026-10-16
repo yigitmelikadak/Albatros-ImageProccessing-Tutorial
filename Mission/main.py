@@ -3,7 +3,7 @@ import numpy as np
 
 capture = cv.VideoCapture(0, cv.CAP_DSHOW)
 
-kernel = np.ones((5, 5), np.uint8)
+kernel = np.ones((7, 7), np.uint8)
 
 width = int(capture.get(3))
 height = int(capture.get(4))
@@ -13,8 +13,23 @@ masked = np.zeros((height, width, 3), np.uint8)
 p_width = width // 3
 p_height = height // 3
 
-lower = np.array([0, 168, 93])
-upper = np.array([10, 255, 240])
+lower = np.array([146, 40, 40])
+upper = np.array([179, 255, 255])
+
+def whichsquare(x,y):
+    if y > 0 and y <= p_height:
+       height = "A"
+    elif y > p_height and y <= p_height * 2:
+        height = "B"
+    else:
+        height = "C"
+    if x > 0 and x <= p_width:
+        width = "1"
+    elif x > p_width and x <= p_width * 2:
+        width = "2"
+    else:
+        width = "3"
+    return height + width
 
 def draw_lines():
     # üşendim böyle yaptım.
@@ -52,11 +67,16 @@ while True:
     mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel, iterations=1)
     mask = cv.morphologyEx(mask, cv.MORPH_CLOSE, kernel, iterations=2)
 
-    _, thresh_mask = cv.threshold(mask, 127, 255, cv.THRESH_BINARY)
+    _, thresh_mask = cv.threshold(mask, 196, 255, cv.THRESH_BINARY)
     contours, _ = cv.findContours(thresh_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
     for contour in contours:
-        if cv.contourArea(contour) >= 926:
+        if cv.contourArea(contour) >= 1379:
             square.append(contour)
+            cv.drawContours(frame, [contour], -1, (0, 255, 0), 2)
+            x, y, w, h = cv.boundingRect(contour)
+            cX = x + (w // 2)
+            cY = y + (h // 2)
+            cv.putText(frame, f"Bulundu: {whichsquare(cX,cY)}", (cX - 20, cY), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
             print(f"{len(square)} bulundu.")
 
     frame = cv.bitwise_or(frame, masked)
