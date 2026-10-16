@@ -4,6 +4,7 @@ import numpy as np
 capture = cv.VideoCapture(0, cv.CAP_DSHOW)
 
 kernel = np.ones((5, 5), np.uint8)
+bridge_kernel = np.ones((33, 33), np.uint8)
 
 width = int(capture.get(3))
 height = int(capture.get(4))
@@ -21,18 +22,18 @@ green_upper = np.array([93, 200, 255])
 
 def whichsquare(x,y):
     if y > 0 and y <= p_height:
-       height = "A"
+       row = "A"
     elif y > p_height and y <= p_height * 2:
-        height = "B"
+        row = "B"
     else:
-        height = "C"
+        row = "C"
     if x > 0 and x <= p_width:
-        width = "1"
+        col = "1"
     elif x > p_width and x <= p_width * 2:
-        width = "2"
+        col = "2"
     else:
-        width = "3"
-    return height + width
+        col = "3"
+    return row + col
 
 def draw_lines():
     # üşendim böyle yaptım.
@@ -58,8 +59,37 @@ def draw_lines():
 
 draw_lines()
 
+def angle_cos(p0, p1, p2):
+    d1, d2 = (p0 - p1).astype('float'), (p2 - p1).astype('float')
+    return abs(np.dot(d1, d2) / np.sqrt(np.dot(d1, d1) * np.dot(d2, d2)))
+
+def find_contours(contours, color):
+    for contour in contours:
+        if cv.contourArea(contour) >= 1300:
+            isSquare = False
+            perimeter = cv.arcLength(contour, True)
+            epsilon = 0.04 * perimeter
+            approx = cv.approxPolyDP(cv.convexHull(contour), epsilon, True)
+            if len(approx) == 4:
+                pts = approx.reshape(4, 2)
+                max_cos = np.max([angle_cos(pts[i], pts[(i + 1) % 4], pts[(i + 2) % 4]) for i in range(4)])
+                x, y, w, h = cv.boundingRect(approx)
+                aspect_ratio = float(w) / h
+                if 0.85 <= aspect_ratio <= 1.15 and max_cos < 0.2:
+                    isSquare = True
+            x, y, w, h = cv.boundingRect(contour)
+            cX = x + (w // 2)
+            cY = y + (h // 2)
+
+            if isSquare:
+                cv.drawContours(frame, [approx], -1, color, 2)
+                cv.putText(frame, f"Kare bulundu: {whichsquare(cX, cY)}", (cX - 20, cY), cv.FONT_HERSHEY_SIMPLEX, 0.5,(0, 0, 255), 2)
+            else:
+                cv.drawContours(frame, [contour], -1, color, 2)
+                cv.putText(frame, f"Tanımsız: {whichsquare(cX,cY)}", (cX - 20, cY), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+
+
 while True:
-    square = []
     ret, frame = capture.read()
     frame = cv.flip(frame, 1)
 
@@ -68,33 +98,19 @@ while True:
 
     red_mask = cv.inRange(into_hsv, red_lower, red_upper)
     red_mask = cv.morphologyEx(red_mask, cv.MORPH_OPEN, kernel, iterations=1)
-    red_mask = cv.morphologyEx(red_mask, cv.MORPH_CLOSE, kernel, iterations=2)
+    red_mask = cv.morphologyEx(red_mask, cv.MORPH_CLOSE, bridge_kernel, iterations=2)
+    red_contours, _ = cv.findContours(red_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    find_contours(red_contours, (0,0,255) )
 
     green_mask = cv.inRange(into_hsv, green_lower, green_upper)
     green_mask = cv.morphologyEx(green_mask, cv.MORPH_OPEN, kernel, iterations=1)
     green_mask = cv.morphologyEx(green_mask, cv.MORPH_CLOSE, kernel, iterations=2)
+    green_contours, _ = cv.findContours(green_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
+    find_contours(green_contours, (0,255,0))
 
-    _, red_thresh_mask = cv.threshold(red_mask, 200, 255, cv.THRESH_BINARY)
-    _, green_thresh_mask = cv.threshold(green_mask, 200, 255, cv.THRESH_BINARY)
-    red_contours, _ = cv.findContours(red_thresh_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    green_contours, _ = cv.findContours(green_thresh_mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
-    for contour in red_contours:
-        if cv.contourArea(contour) >= 1300:
-            square.append(contour)
-            cv.drawContours(frame, [contour], -1, (0, 0, 255), 2)
-            x, y, w, h = cv.boundingRect(contour)
-            cX = x + (w // 2)
-            cY = y + (h // 2)
-            cv.putText(frame, f"Bulundu: {whichsquare(cX,cY)}", (cX - 20, cY), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-    for contour in green_contours:
-        if cv.contourArea(contour) >= 1300:
-            square.append(contour)
-            cv.drawContours(frame, [contour], -1, (0, 255, 0), 2)
-            x, y, w, h = cv.boundingRect(contour)
-            cX = x + (w // 2)
-            cY = y + (h // 2)
-            cv.putText(frame, f"Bulundu: {whichsquare(cX,cY)}", (cX - 20, cY), cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
     frame = cv.bitwise_or(frame, masked)
     cv.imshow('frame', frame)
     if cv.waitKey(1) & 0xFF == ord('q'):
         break
+capture.release()
+cv.destroyAllWindows()
